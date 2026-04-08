@@ -1,0 +1,4 @@
+# ログインシェル（bash -il）で読み込む
+if [ -f ~/.bashrc ]; then
+  . ~/.bashrc
+fi

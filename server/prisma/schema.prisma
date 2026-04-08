@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  learner
+  admin
+}
+
+enum UserStatus {
+  active
+  disabled
+}
+
+enum CourseStatus {
+  active
+  archived
+}
+
+enum ContainerAssignmentStatus {
+  creating
+  running
+  stopped
+  error
+}
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  loginId      String     @unique @map("login_id")
+  userName     String     @map("user_name")
+  passwordHash String     @map("password_hash")
+  role         Role
+  status       UserStatus @default(active)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  enrollments    UserCourseEnrollment[]
+  assignments    ContainerAssignment[]
+  commandHistory CommandHistory[]
+  connectionLogs ConnectionLog[]
+  adminActions   AdminAuditLog[] @relation("AdminAuditAdmin")
+  adminTargets   AdminAuditLog[] @relation("AdminAuditTarget")
+  taskCompletions UserTaskCompletion[]
+}
+
+model Course {
+  id          String       @id @default(uuid()) @db.Uuid
+  courseName  String       @map("course_name")
+  description String?
+  status      CourseStatus @default(active)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  tasks        Task[]
+  enrollments  UserCourseEnrollment[]
+}
+
+model Task {
+  id                String   @id @default(uuid()) @db.Uuid
+  courseId          String   @map("course_id") @db.Uuid
+  taskName          String   @map("task_name")
+  description       String?
+  initialTemplateId String?  @map("initial_template_id")
+  displayOrder      Int      @default(0) @map("display_order")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  course       Course                @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  assignments  ContainerAssignment[]
+  completions  UserTaskCompletion[]
+}
+
+model UserTaskCompletion {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  taskId      String   @map("task_id") @db.Uuid
+  completedAt DateTime @default(now()) @map("completed_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId])
+  @@index([userId])
+  @@map("user_task_completions")
+}
+
+model UserCourseEnrollment {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  courseId  String   @map("course_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("user_course_enrollments")
+}
+
+model ContainerAssignment {
+  id            String                    @id @default(uuid()) @db.Uuid
+  userId        String                    @map("user_id") @db.Uuid
+  taskId        String?                   @map("task_id") @db.Uuid
+  containerId   String?                   @map("container_id")
+  containerName String                    @map("container_name")
+  status        ContainerAssignmentStatus @default(creating)
+  lastAccessAt  DateTime?                 @map("last_access_at")
+  createdAt     DateTime                  @default(now()) @map("created_at")
+  updatedAt     DateTime                  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@unique([userId])
+  @@map("container_assignments")
+}
+
+model CommandHistory {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  connectionId  String?  @map("connection_id") @db.Uuid
+  commandText   String   @map("command_text")
+  executedAt    DateTime @default(now()) @map("executed_at")
+  resultStatus  String?  @map("result_status")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, executedAt(sort: Desc)])
+  @@map("command_history")
+}
+
+model ConnectionLog {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  sessionId       String    @map("session_id")
+  connectedAt     DateTime  @default(now()) @map("connected_at")
+  disconnectedAt  DateTime? @map("disconnected_at")
+  websocketStatus String?   @map("websocket_status")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, connectedAt(sort: Desc)])
+  @@map("connection_logs")
+}
+
+model AdminAuditLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  adminUserId  String?  @map("admin_user_id") @db.Uuid
+  targetUserId String?  @map("target_user_id") @db.Uuid
+  actionType   String   @map("action_type")
+  actionResult String   @map("action_result")
+  detail       Json?
+  executedAt   DateTime @default(now()) @map("executed_at")
+
+  adminUser  User? @relation("AdminAuditAdmin", fields: [adminUserId], references: [id], onDelete: SetNull)
+  targetUser User? @relation("AdminAuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+
+  @@index([executedAt(sort: Desc)])
+  @@map("admin_audit_logs")
+}

@@ -1,0 +1,4 @@
+.env
+nginx/certs/server.key
+nginx/certs/server.crt
+nginx/conf.d/https.conf

@@ -1,0 +1,15 @@
+{
+  "tasks": [
+    {
+      "task_name": "説明に改行を含む例",
+      "description": "JSON では改行は \\n で表します。\n2行目の説明です。\n\n手順:\n・ステップ1\n・ステップ2"
+    },
+    {
+      "task_name": "説明なしの課題"
+    },
+    {
+      "name": "name キーで課題名を指定する例",
+      "description": "task_name の代わりに name も使えます（どちらか一方）。"
+    }
+  ]
+}

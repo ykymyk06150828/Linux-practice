@@ -1,0 +1,11 @@
+# Amazon Linux 2023 研修コンテナ — 対話シェル用
+case $- in
+  *i*) ;;
+  *) return ;;
+esac
+
+export TERM="${TERM:-xterm}"
+# 例: learner@46ed6e407944:~$
+export PS1='\u@\h:\w\$ '
+
+alias ll='ls -la'

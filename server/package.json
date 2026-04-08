@@ -1,0 +1,42 @@
+{
+  "name": "linuxtrainer-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "prisma generate && tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^10.0.2",
+    "@fastify/websocket": "^11.2.0",
+    "@prisma/client": "^6.3.1",
+    "argon2": "^0.41.1",
+    "csv-parse": "^6.2.1",
+    "dockerode": "^4.0.4",
+    "fastify": "^5.2.1",
+    "ioredis": "^5.4.2",
+    "nanoid": "^5.1.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/dockerode": "^4.0.1",
+    "@types/node": "^22.13.10",
+    "@types/ws": "^8.18.1",
+    "prisma": "^6.3.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
